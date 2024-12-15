@@ -1,0 +1,24 @@
+name: 'Multi-module Version Manager'
+description: 'Manages versions of multiple Gradle modules based on conventional commits'
+author: 'Your Name'
+
+inputs:
+  working-directory:
+    description: 'The root directory containing the Gradle modules'
+    required: false
+    default: '.'
+  dry-run:
+    description: 'Run in dry-run mode without making actual changes'
+    required: false
+    default: 'false'
+  github-token:
+    description: 'GitHub token for creating tags and releases'
+    required: true
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'package'
+  color: 'blue'
