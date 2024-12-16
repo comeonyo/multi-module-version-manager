@@ -1,6 +1,6 @@
 name: 'Multi-module Version Manager'
 description: 'Manages versions of multiple Gradle modules based on conventional commits'
-author: 'Your Name'
+author: 'comeonyo'
 
 inputs:
   working-directory:
