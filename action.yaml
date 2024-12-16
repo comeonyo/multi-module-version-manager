@@ -1,4 +1,4 @@
-name: 'Multi-module Version Manager'
+name: 'multi-module-version-manager'
 description: 'Manages versions of multiple Gradle modules based on conventional commits'
 author: 'comeonyo'
 
