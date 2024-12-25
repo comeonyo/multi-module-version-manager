@@ -251,9 +251,25 @@ class MultiModuleVersionManager {
     async updateVersions() {
         console.log('버전 정보 업데이트 중...');
 
+        // 변경된 파일들을 추적하기 위한 배열
+        const modifiedFiles = [];
+
+        // 1. 먼저 모든 파일 수정
         for (const node of this.moduleOrder) {
             if (node.newVersion) {
-                await this.updateGradleVersion(node);
+                const file = await this.updateGradleVersion(node);
+                if (file) modifiedFiles.push(file);
+            }
+        }
+
+        // 2. 변경사항이 있으면 커밋 생성
+        if (modifiedFiles.length > 0 && !this.dryRun) {
+            await this.commitChanges(modifiedFiles);
+        }
+
+        // 3. 태그 생성
+        for (const node of this.moduleOrder) {
+            if (node.newVersion) {
                 await this.createGitTag(node);
             }
         }
@@ -268,8 +284,42 @@ class MultiModuleVersionManager {
             `version = "${node.newVersion}"`
         );
 
-        fs.writeFileSync(buildGradlePath, updatedContent);
-        console.log(`${node.name}의 버전을 ${node.newVersion}로 업데이트했습니다.`);
+        if (!this.dryRun) {
+            fs.writeFileSync(buildGradlePath, updatedContent);
+            console.log(`${node.name}의 버전을 ${node.newVersion}로 업데이트했습니다.`);
+            return buildGradlePath;  // 수정된 파일 경로 반환
+        } else {
+            console.log(`[Dry-run] ${node.name}의 버전을 ${node.newVersion}로 업데이트 예정`);
+            return null;
+        }
+    }
+
+    async commitChanges(files) {
+        const { owner, repo } = github.context.repo;
+
+        try {
+            // 변경된 파일들을 스테이징
+            for (const file of files) {
+                execSync(`git add "${file}"`, { cwd: this.rootDir });
+            }
+
+            // 커밋 생성
+            execSync(
+                'git commit -m "chore: Update module versions"',
+                { cwd: this.rootDir }
+            );
+
+            // GitHub에 푸시
+            execSync(
+                `git push origin ${github.context.ref}`,
+                { cwd: this.rootDir }
+            );
+
+            console.log('버전 업데이트 변경사항이 커밋되었습니다.');
+        } catch (error) {
+            console.error('커밋 생성 중 오류 발생:', error);
+            throw error;
+        }
     }
 
     async createGitTag(node) {
