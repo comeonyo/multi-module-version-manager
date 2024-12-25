@@ -22,12 +22,12 @@ async function run() {
                 const { owner, repo } = github.context.repo;
 
                 // Create tag
-                await octokit.rest.git.createRef({
-                    owner,
-                    repo,
-                    ref: `refs/tags/${tag}`,
-                    sha: github.context.sha
-                });
+                // await octokit.rest.git.createRef({
+                //     owner,
+                //     repo,
+                //     ref: `refs/tags/${tag}`,
+                //     sha: github.context.sha
+                // });
 
                 // Create release
                 // await octokit.rest.repos.createRelease({

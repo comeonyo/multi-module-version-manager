@@ -273,6 +273,12 @@ class MultiModuleVersionManager {
     }
 
     async createGitTag(node) {
+        // dry-run 모드 체크를 가장 먼저 수행
+        if (this.dryRun) {
+            console.log(`[Dry-run] 태그 생성이 스킵됨: ${node.name.replace(':', '-')}-v${node.newVersion}`);
+            return;
+        }
+
         const tag = `${node.name.replace(':', '-')}-v${node.newVersion}`;
         const { owner, repo } = github.context.repo;
 
