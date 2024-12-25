@@ -30186,10 +30186,17 @@ class MultiModuleVersionManager {
 
     async createGitTag(node) {
         const tag = `${node.name.replace(':', '-')}-v${node.newVersion}`;
-        execSync(`git tag -a ${tag} -m "Release ${node.name} ${node.newVersion}"`, {
-            cwd: this.rootDir
-        });
-        console.log(`태그 생성: ${tag}`);
+        try {
+            // 태그가 이미 존재하는지 확인
+            execSync(`git rev-parse ${tag}`, { cwd: this.rootDir });
+            console.log(`태그가 이미 존재합니다: ${tag}`);
+        } catch (error) {
+            // 태그가 존재하지 않으면 생성
+            execSync(`git tag -a ${tag} -m "Release ${node.name} ${node.newVersion}"`, {
+                cwd: this.rootDir
+            });
+            console.log(`태그 생성: ${tag}`);
+        }
     }
 
     async generateChangelogs() {
