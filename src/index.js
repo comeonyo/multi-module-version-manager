@@ -30,15 +30,15 @@ async function run() {
                 });
 
                 // Create release
-                await octokit.rest.repos.createRelease({
-                    owner,
-                    repo,
-                    tag_name: tag,
-                    name: `${node.name} v${node.newVersion}`,
-                    body: await this.generateReleaseNotes(node),
-                    draft: false,
-                    prerelease: false
-                });
+                // await octokit.rest.repos.createRelease({
+                //     owner,
+                //     repo,
+                //     tag_name: tag,
+                //     name: `${node.name} v${node.newVersion}`,
+                //     body: await this.generateReleaseNotes(node),
+                //     draft: false,
+                //     prerelease: false
+                // });
             }
             core.info(`Created tag and release: ${tag}`);
         };
