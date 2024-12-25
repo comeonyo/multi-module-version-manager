@@ -30033,39 +30033,58 @@ class MultiModuleVersionManager {
     async analyzeChanges() {
         console.log('변경사항 분석 중...');
 
-        const lastTag = await this.getLastTag();
         for (const node of this.moduleGraph.values()) {
             console.log(`[디버깅] 분석 중인 모듈: ${node.name} (${node.path})`);
+            const lastTag = await this.getLastTag(node.name);  // 모듈 이름 전달
             const changes = await this.getCommitsSinceTag(lastTag, node.path);
             console.log(`[디버깅] ${node.name}의 커밋 수: ${changes.length}`);
+            if (changes.length > 0) {
+                console.log(`[디버깅] 커밋 목록:`, changes);
+            }
             node.changeType = this.determineChangeType(changes);
         }
     }
 
-    async getLastTag() {
+
+    async getLastTag(moduleName) {
         try {
+            // 특정 모듈의 가장 최근 태그를 찾음
+            const modulePrefix = moduleName.replace(':', '-');
             const result = execSync(
-                'git describe --tags --abbrev=0',
+                `git tag -l "${modulePrefix}-v*" --sort=-v:refname | head -n 1`,
                 { cwd: this.rootDir, encoding: 'utf8' }
             ).trim();
+
+            if (!result) {
+                console.log(`[정보] ${moduleName}의 이전 태그가 없습니다. 첫 릴리스로 간주합니다.`);
+                return null;
+            }
+
+            console.log(`[정보] ${moduleName}의 마지막 태그: ${result}`);
             return result;
         } catch (error) {
-            console.warn('[경고] 태그를 찾을 수 없습니다. 첫 릴리스로 간주합니다.');
+            console.warn(`[경고] ${moduleName}의 태그를 찾는 중 오류 발생:`, error);
             return null;
         }
     }
 
     async getCommitsSinceTag(lastTag, modulePath) {
-        // lastTag가 존재하는 경우: 해당 태그 이후부터 현재 커밋(HEAD)까지의 커밋을 가져옵니다. 예: v1.0.0..HEAD
-        // lastTag가 없는 경우: Git 저장소의 모든 커밋(HEAD까지)을 가져옵니다.
-        const range = lastTag ? `${lastTag}..HEAD` : 'HEAD';
         try {
-            // 현재 디렉토리(modulePath) 내의 파일 변경에 대한 커밋만 포함합니다.
+            const range = lastTag ? `${lastTag}..HEAD` : '';
+            const gitCommand = range
+                ? `git log ${range} --format=%s -- ${modulePath}`
+                : `git log --format=%s -- ${modulePath}`;
+
             const result = execSync(
-                `git log ${range} --format=%s -- ${modulePath}`,
+                gitCommand,
                 { cwd: this.rootDir, encoding: 'utf8' }
             ).trim();
-            return result.split('\n').filter(Boolean);
+
+            const commits = result.split('\n').filter(Boolean);
+            if (commits.length > 0) {
+                console.log(`[디버깅] ${modulePath} 경로의 커밋:`, commits);
+            }
+            return commits;
         } catch (error) {
             console.warn(`[경고] ${modulePath}에서 커밋을 가져오는 중 오류 발생: ${error.message}`);
             return [];
