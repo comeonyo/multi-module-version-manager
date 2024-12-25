@@ -1,6 +1,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const github = require('@actions/github');
 
 class ModuleNode {
     constructor(name, currentVersion) {
