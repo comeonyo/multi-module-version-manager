@@ -29913,6 +29913,7 @@ function wrappy (fn, cb) {
 const { execSync } = __nccwpck_require__(5317);
 const fs = __nccwpck_require__(9896);
 const path = __nccwpck_require__(6928);
+const github = __nccwpck_require__(3228);
 
 class ModuleNode {
     constructor(name, currentVersion) {
@@ -32267,7 +32268,7 @@ module.exports = parseParams
 /************************************************************************/
 var __webpack_exports__ = {};
 const core = __nccwpck_require__(7484);
-const src_github = __nccwpck_require__(3228);
+const github = __nccwpck_require__(3228);
 const MultiModuleVersionManager = __nccwpck_require__(1863);
 
 async function run() {
@@ -32278,7 +32279,7 @@ async function run() {
         const githubToken = core.getInput('github-token');
 
         // Initialize the octokit client
-        const octokit = src_github.getOctokit(githubToken);
+        const octokit = github.getOctokit(githubToken);
 
         // Create and execute the version manager
         const manager = new MultiModuleVersionManager(workingDirectory, dryRun);
@@ -32287,7 +32288,7 @@ async function run() {
         manager.createGitTag = async function(node) {
             const tag = `${node.name.replace(':', '-')}-v${node.newVersion}`;
             if (!this.dryRun) {
-                const { owner, repo } = src_github.context.repo;
+                const { owner, repo } = github.context.repo;
 
                 // Create tag
                 // await octokit.rest.git.createRef({
