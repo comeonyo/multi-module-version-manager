@@ -274,14 +274,26 @@ class MultiModuleVersionManager {
 
     async createGitTag(node) {
         const tag = `${node.name.replace(':', '-')}-v${node.newVersion}`;
+        const { owner, repo } = github.context.repo;
+
         try {
-            // 태그가 이미 존재하는지 확인
-            execSync(`git rev-parse ${tag}`, { cwd: this.rootDir });
+            // GitHub API로 태그 존재 여부 확인
+            await octokit.rest.git.getRef({
+                owner,
+                repo,
+                ref: `tags/${tag}`
+            });
             console.log(`태그가 이미 존재합니다: ${tag}`);
+            return;
         } catch (error) {
-            // 태그가 존재하지 않으면 생성
-            execSync(`git tag -a ${tag} -m "Release ${node.name} ${node.newVersion}"`, {
-                cwd: this.rootDir
+            if (error.status !== 404) throw error;
+
+            // 태그가 없는 경우에만 생성
+            await octokit.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/tags/${tag}`,
+                sha: github.context.sha
             });
             console.log(`태그 생성: ${tag}`);
         }
