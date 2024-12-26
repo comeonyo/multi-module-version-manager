@@ -165,7 +165,9 @@ class MultiModuleVersionManager {
             if (lastTag) {
                 // 태그가 존재하는지 먼저 확인
                 try {
-                    execSync(`git rev-parse --verify ${lastTag}`, {
+                    const command = `git rev-parse --verify ${lastTag}`;
+                    console.log(`[디버깅] 태그가 존재하는지 먼저 확인: ${command}`);
+                    execSync(command, {
                         cwd: this.rootDir,
                         stdio: 'ignore'
                     });
