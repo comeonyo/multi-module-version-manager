@@ -30070,10 +30070,29 @@ class MultiModuleVersionManager {
 
     async getCommitsSinceTag(lastTag, modulePath) {
         try {
-            const range = lastTag ? `${lastTag}..HEAD` : '';
-            const gitCommand = range
-                ? `git log ${range} --format=%s -- ${modulePath}`
-                : `git log --format=%s -- ${modulePath}`;
+            // modulePath에서 실제 모듈 디렉토리 경로 추출
+            // 예: 'domain-v1.0.0'가 아닌 'domain' 디렉토리를 참조해야 함
+            const moduleDir = path.basename(path.dirname(modulePath));
+
+            if (lastTag) {
+                // 태그가 존재하는지 먼저 확인
+                try {
+                    execSync(`git rev-parse --verify ${lastTag}`, {
+                        cwd: this.rootDir,
+                        stdio: 'ignore'
+                    });
+                } catch (error) {
+                    console.warn(`[경고] ${lastTag} 태그가 존재하지 않습니다. 전체 히스토리를 사용합니다.`);
+                    lastTag = null;
+                }
+            }
+
+            // git log 명령어 구성
+            const gitCommand = lastTag
+                ? `git log ${lastTag}..HEAD --format=%s -- ${moduleDir}`
+                : `git log --format=%s -- ${moduleDir}`;
+
+            console.log(`[디버깅] 실행할 git 명령어: ${gitCommand}`);
 
             const result = execSync(
                 gitCommand,
@@ -30082,11 +30101,11 @@ class MultiModuleVersionManager {
 
             const commits = result.split('\n').filter(Boolean);
             if (commits.length > 0) {
-                console.log(`[디버깅] ${modulePath} 경로의 커밋:`, commits);
+                console.log(`[디버깅] ${moduleDir} 경로의 커밋:`, commits);
             }
             return commits;
         } catch (error) {
-            console.warn(`[경고] ${modulePath}에서 커밋을 가져오는 중 오류 발생: ${error.message}`);
+            console.warn(`[경고] ${moduleDir || modulePath}에서 커밋을 가져오는 중 오류 발생: ${error.message}`);
             return [];
         }
     }
